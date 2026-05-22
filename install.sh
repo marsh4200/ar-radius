@@ -131,7 +131,7 @@ ok "Web configuration written."
 
 # Write version file
 if [[ ! -f "${INSTALL_DIR}/VERSION" ]]; then
-    echo "1.0.0" > "${INSTALL_DIR}/VERSION"
+    echo "1.0.1" > "${INSTALL_DIR}/VERSION"
 fi
 
 # ---------- 7. FreeRADIUS SQL module ----------------------------------------
@@ -148,6 +148,11 @@ fi
 # Configure SQL module
 cp "${INSTALL_DIR}/config/freeradius-sql" "${RAD_DIR}/mods-available/sql"
 sed -i "s|@@DB_HOST@@|${DB_HOST}|g; s|@@DB_NAME@@|${DB_NAME}|g; s|@@DB_USER@@|${DB_USER}|g; s|@@DB_PASS@@|${DB_PASS}|g" "${RAD_DIR}/mods-available/sql"
+
+# Fix FreeRADIUS 3.2 compatibility: default group_attribute expands to "sql-SQL-Group"
+# which is no longer a valid attribute name. Force it to plain "SQL-Group".
+sed -i 's|group_attribute = "${.:instance}-SQL-Group"|group_attribute = "SQL-Group"|' "${RAD_DIR}/mods-available/sql"
+
 ln -sf "${RAD_DIR}/mods-available/sql" "${RAD_DIR}/mods-enabled/sql"
 chgrp -h freerad "${RAD_DIR}/mods-available/sql" "${RAD_DIR}/mods-enabled/sql" 2>/dev/null || true
 chmod 640 "${RAD_DIR}/mods-available/sql"
