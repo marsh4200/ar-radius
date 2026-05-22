@@ -1,0 +1,57 @@
+# -*- text -*-
+##
+## AR Radius - FreeRADIUS SQL module (MariaDB / MySQL)
+## Placed at /etc/freeradius/3.0/mods-available/sql
+## Symlinked from /etc/freeradius/3.0/mods-enabled/sql
+##
+
+sql {
+    dialect = "mysql"
+    driver = "rlm_sql_${dialect}"
+
+    mysql {
+        tls {
+            ca_file = "/etc/ssl/certs/ca-certificates.crt"
+        }
+        warnings = auto
+    }
+
+    # Connection info (placeholders replaced by installer)
+    server   = "@@DB_HOST@@"
+    port     = 3306
+    login    = "@@DB_USER@@"
+    password = "@@DB_PASS@@"
+    radius_db = "@@DB_NAME@@"
+
+    # Table layout - default FreeRADIUS naming
+    acct_table1 = "radacct"
+    acct_table2 = "radacct"
+    postauth_table = "radpostauth"
+    authcheck_table = "radcheck"
+    groupcheck_table = "radgroupcheck"
+    authreply_table = "radreply"
+    groupreply_table = "radgroupreply"
+    usergroup_table = "radusergroup"
+
+    # Read NAS clients from DB
+    read_clients = yes
+    client_table = "nas"
+
+    # Group membership query
+    group_attribute = "${.:instance}-SQL-Group"
+
+    # Use the default queries that ship with FreeRADIUS
+    $INCLUDE ${modconfdir}/${.:name}/main/${dialect}/queries.conf
+
+    # Connection pool
+    pool {
+        start = ${thread[pool].start_servers}
+        min = ${thread[pool].min_spare_servers}
+        max = ${thread[pool].max_servers}
+        spare = ${thread[pool].max_spare_servers}
+        uses = 0
+        retry_delay = 30
+        lifetime = 0
+        idle_timeout = 60
+    }
+}
