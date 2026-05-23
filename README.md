@@ -1,19 +1,22 @@
-# AR Radius NAS Fix Pack
+# AR Radius NAS Fix Pack #2
 
-Three files that fix the 500 error on the NAS Devices page.
+## What was broken
 
-## What was wrong
+All save / edit / delete / reload calls were being sent as GET requests
+instead of POST / PUT / DELETE because the JavaScript helper `ARapi()`
+only accepts an options object, but the code passed method as a positional
+argument. The wrong method silently fell through and returned the LIST
+endpoint as if it were a success — so the success toast appeared, but
+nothing actually saved, and Reload returned "Method not allowed".
 
-- Used `DB::instance()` which doesn't exist (DB class is static — use `DB::all()` etc).
-- Called `Auth::audit()` with the wrong argument order.
+## Files to push to GitHub
 
-## Files to replace on GitHub
+| File             | Action          |
+|------------------|-----------------|
+| `web/nas.php`    | Replace         |
+| `VERSION`        | Replace (1.0.2) |
 
-| File path             | Action                  |
-|-----------------------|-------------------------|
-| `web/nas.php`         | Replace existing        |
-| `web/api/nas.php`     | Replace existing        |
-| `web/api/reload.php`  | Replace existing        |
-
-After committing, on the server run **System → Run Update** in the GUI
-(or `sudo /opt/ar-radius/update.sh` from terminal) and refresh your browser.
+After committing:
+1. On server: `sudo /opt/ar-radius/update.sh` (or System → Run Update)
+2. Refresh browser
+3. NAS Devices page should now actually save NAS entries

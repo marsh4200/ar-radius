@@ -164,10 +164,10 @@ async function saveNas() {
 
   try {
     if (id) {
-      await ARapi('/api/nas.php?id=' + encodeURIComponent(id), 'PUT', payload);
+      await ARapi('/api/nas.php?id=' + encodeURIComponent(id), { method: 'PUT', body: payload });
       ARtoast('NAS updated. Click "Reload FreeRADIUS" for changes to take effect.', 'success');
     } else {
-      await ARapi('/api/nas.php', 'POST', payload);
+      await ARapi('/api/nas.php', { method: 'POST', body: payload });
       ARtoast('NAS added. Click "Reload FreeRADIUS" for changes to take effect.', 'success');
     }
     ARmodal.close('nasModal');
@@ -180,7 +180,7 @@ async function saveNas() {
 async function deleteNas(id, name) {
   if (!confirm('Delete NAS "' + name + '"? The router will stop being able to authenticate users.')) return;
   try {
-    await ARapi('/api/nas.php?id=' + encodeURIComponent(id), 'DELETE');
+    await ARapi('/api/nas.php?id=' + encodeURIComponent(id), { method: 'DELETE' });
     ARtoast('NAS deleted. Click "Reload FreeRADIUS" for changes to take effect.', 'success');
     setTimeout(() => location.reload(), 800);
   } catch (err) {
@@ -194,7 +194,7 @@ document.getElementById('reloadBtn').addEventListener('click', async () => {
   const original = btn.innerHTML;
   btn.innerHTML = 'Reloading…';
   try {
-    const res = await ARapi('/api/reload.php', 'POST', {});
+    const res = await ARapi('/api/reload.php', { method: 'POST' });
     ARtoast(res.message || 'FreeRADIUS reloaded.', 'success');
   } catch (err) {
     ARtoast('Reload failed: ' + err.message, 'error');
