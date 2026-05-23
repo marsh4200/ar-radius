@@ -15,19 +15,17 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/helpers.php';
 
 Auth::require();
-$db = DB::instance();
-
 $method = $_SERVER['REQUEST_METHOD'];
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 // ---------- GET --------------------------------------------------------------
 if ($method === 'GET') {
     if ($id > 0) {
-        $row = $db->one("SELECT * FROM nas WHERE id = ?", [$id]);
+        $row = DB::one("SELECT * FROM nas WHERE id = ?", [$id]);
         if (!$row) json_response(['error' => 'NAS not found'], 404);
         json_response(['nas' => $row]);
     }
-    $rows = $db->all("SELECT * FROM nas ORDER BY shortname ASC");
+    $rows = DB::all("SELECT * FROM nas ORDER BY shortname ASC");
     json_response(['nas' => $rows]);
 }
 
@@ -63,16 +61,16 @@ if ($method === 'POST') {
     if (strlen($secret) < 4)          json_response(['error' => 'Shared secret must be at least 4 characters'], 400);
 
     // Prevent duplicate nasname
-    $existing = $db->one("SELECT id FROM nas WHERE nasname = ?", [$nasname]);
+    $existing = DB::one("SELECT id FROM nas WHERE nasname = ?", [$nasname]);
     if ($existing) json_response(['error' => 'A NAS with that IP/hostname already exists'], 409);
 
-    $db->exec(
+    DB::exec(
         "INSERT INTO nas (nasname, shortname, type, secret, description) VALUES (?, ?, ?, ?, ?)",
         [$nasname, $shortname, $type, $secret, $desc]
     );
-    $newId = $db->lastId();
+    $newId = DB::lastId();
 
-    Auth::audit('nas.create', $shortname, "id=$newId ip=$nasname type=$type");
+    Auth::audit(Auth::user(), 'nas.create', $shortname, $_SERVER['REMOTE_ADDR'] ?? null, "id=$newId ip=$nasname type=$type");
     json_response(['ok' => true, 'id' => $newId]);
 }
 
@@ -80,7 +78,7 @@ if ($method === 'POST') {
 if ($method === 'PUT') {
     if ($id <= 0) json_response(['error' => 'Missing id'], 400);
 
-    $existing = $db->one("SELECT * FROM nas WHERE id = ?", [$id]);
+    $existing = DB::one("SELECT * FROM nas WHERE id = ?", [$id]);
     if (!$existing) json_response(['error' => 'NAS not found'], 404);
 
     $shortname = clean($body, 'shortname', 32);
@@ -94,15 +92,15 @@ if ($method === 'PUT') {
     if (strlen($secret) < 4)          json_response(['error' => 'Shared secret must be at least 4 characters'], 400);
 
     // Check duplicates (but allow keeping our own nasname)
-    $dup = $db->one("SELECT id FROM nas WHERE nasname = ? AND id != ?", [$nasname, $id]);
+    $dup = DB::one("SELECT id FROM nas WHERE nasname = ? AND id != ?", [$nasname, $id]);
     if ($dup) json_response(['error' => 'Another NAS already uses that IP/hostname'], 409);
 
-    $db->exec(
+    DB::exec(
         "UPDATE nas SET nasname = ?, shortname = ?, type = ?, secret = ?, description = ? WHERE id = ?",
         [$nasname, $shortname, $type, $secret, $desc, $id]
     );
 
-    Auth::audit('nas.update', $shortname, "id=$id ip=$nasname");
+    Auth::audit(Auth::user(), 'nas.update', $shortname, $_SERVER['REMOTE_ADDR'] ?? null, "id=$id ip=$nasname");
     json_response(['ok' => true]);
 }
 
@@ -110,12 +108,12 @@ if ($method === 'PUT') {
 if ($method === 'DELETE') {
     if ($id <= 0) json_response(['error' => 'Missing id'], 400);
 
-    $existing = $db->one("SELECT * FROM nas WHERE id = ?", [$id]);
+    $existing = DB::one("SELECT * FROM nas WHERE id = ?", [$id]);
     if (!$existing) json_response(['error' => 'NAS not found'], 404);
 
-    $db->exec("DELETE FROM nas WHERE id = ?", [$id]);
+    DB::exec("DELETE FROM nas WHERE id = ?", [$id]);
 
-    Auth::audit('nas.delete', $existing['shortname'], "id=$id ip=" . $existing['nasname']);
+    Auth::audit(Auth::user(), 'nas.delete', $existing['shortname'], $_SERVER['REMOTE_ADDR'] ?? null, "id=$id ip=" . $existing['nasname']);
     json_response(['ok' => true]);
 }
 

@@ -30,7 +30,7 @@ exec('systemctl is-active freeradius 2>&1', $statusOutput, $statusRc);
 $active = trim(implode("\n", $statusOutput));
 
 if ($rc !== 0) {
-    Auth::audit('freeradius.reload', 'failure', "rc=$rc output=" . substr(implode("\n", $output), 0, 200));
+    Auth::audit(Auth::user(), 'freeradius.reload', 'failure', $_SERVER['REMOTE_ADDR'] ?? null, "rc=$rc output=" . substr(implode("\n", $output), 0, 200));
     json_response([
         'error'   => 'Restart command failed',
         'rc'      => $rc,
@@ -40,14 +40,14 @@ if ($rc !== 0) {
 }
 
 if ($active !== 'active') {
-    Auth::audit('freeradius.reload', 'failed-to-start', "active=$active");
+    Auth::audit(Auth::user(), 'freeradius.reload', 'failed-to-start', $_SERVER['REMOTE_ADDR'] ?? null, "active=$active");
     json_response([
         'error'   => 'FreeRADIUS restarted but is not active. Check `sudo journalctl -u freeradius -n 50` on the server.',
         'active'  => $active,
     ], 500);
 }
 
-Auth::audit('freeradius.reload', 'success', 'active=active');
+Auth::audit(Auth::user(), 'freeradius.reload', 'success', $_SERVER['REMOTE_ADDR'] ?? null, 'active=active');
 json_response([
     'ok'      => true,
     'active'  => $active,

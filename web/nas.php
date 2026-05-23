@@ -10,10 +10,8 @@ $pageTitle = 'NAS Devices';
 $activeNav = 'nas';
 require __DIR__ . '/includes/layout.php';
 
-$db = DB::instance();
-
 // Pull all configured NAS devices, plus per-device session counters
-$rows = $db->all("
+$rows = DB::all("
     SELECT
         n.id, n.nasname, n.shortname, n.type, n.ports, n.secret,
         n.server, n.community, n.description,
