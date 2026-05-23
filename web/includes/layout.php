@@ -18,6 +18,7 @@ $version = ar_version();
 $nav = [
     'dashboard' => ['label' => 'Dashboard', 'icon' => 'home',      'href' => '/index.php'],
     'users'     => ['label' => 'Users',     'icon' => 'users',     'href' => '/users.php'],
+    'nas'       => ['label' => 'NAS Devices', 'icon' => 'router',   'href' => '/nas.php'],
     'sessions'  => ['label' => 'Sessions',  'icon' => 'activity',  'href' => '/sessions.php'],
     'system'    => ['label' => 'System',    'icon' => 'settings',  'href' => '/system.php'],
 ];
